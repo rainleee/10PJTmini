@@ -2,6 +2,8 @@ package com.model2.mvc.web.product;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -19,9 +21,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.model2.mvc.common.Page;
 import com.model2.mvc.common.Search;
@@ -31,9 +36,9 @@ import com.model2.mvc.service.product.impl.ProductServiceImpl;
 
 
 //==> 회원관리 Controller
-//@Controller
+@RestController
 @RequestMapping("/product/*")
-public class ProductController2 {
+public class ProductRestController {
 	
 	///Field
 	@Autowired
@@ -41,7 +46,7 @@ public class ProductController2 {
 	private ProductService productService;
 	//setter Method 구현 않음
 		
-	public ProductController2(){
+	public ProductRestController(){
 		System.out.println(this.getClass());
 	}
 	
@@ -55,25 +60,24 @@ public class ProductController2 {
 	//@Value("#{commonProperties['pageSize'] ?: 2}")
 	int pageSize;
 	
+	//.jsp로 안내할 일이 없어서 GET방식은 삭제
+//	@RequestMapping(value = "addProduct", method =RequestMethod.GET)
+//	public String addProduct() throws Exception {
+//
+//		System.out.println("/product/addProduct : GET");
+//		
+//		return "redirect:/product/addProductView.jsp";
+//	}
 	
-//	@RequestMapping("/addProductView.do")
-//	public String addProductView() throws Exception {
-	@RequestMapping(value = "addProduct", method =RequestMethod.GET)
-	public String addProduct() throws Exception {
-
-		System.out.println("/product/addProduct : GET");
-		
-		return "redirect:/product/addProductView.jsp";
-	}
-	
-	@RequestMapping(value = "addProduct", method = RequestMethod.POST)
+	//아직 안함
+	@RequestMapping(value = "json/addProduct", method = RequestMethod.POST)
 	public String addProduct( @ModelAttribute("product") Product product,
 								HttpServletRequest request,
 								HttpServletResponse response,
 								Model model) throws Exception {
 		
 		if(FileUpload.isMultipartContent(request)) {
-			String temDir = "C:\\workspace\\09.Model2MVCShop(jQuery)\\WebContent\\images\\uploadFiles";
+			String temDir = "C:\\Users\\user\\git\\repository\\07PJTmini\\07.Model2MVCShop(URI,pattern)\\WebContent\\images\\uploadFiles";
 			
 			DiskFileUpload fileUpload = new DiskFileUpload();
 			fileUpload.setRepositoryPath(temDir);
@@ -153,90 +157,51 @@ public class ProductController2 {
 		return "forward:/product/addProduct.jsp";
 	}
 	
-//	@RequestMapping("/getProduct.do")
-//	public String getProduct( @RequestParam("prodNo") int prodNo , 
-//								@RequestParam(value = "menu", required = false) String menu, 
-//									Model model ) throws Exception {
-	@RequestMapping(value = "getProduct", method = RequestMethod.GET)
-	public String getProduct( @RequestParam("prodNo") int prodNo , 
-			@RequestParam(value = "menu", required = false) String menu, 
-			Model model ) throws Exception {
+	@RequestMapping(value = "json/getProduct/{prodNo}", method = RequestMethod.GET)
+	public Product getProduct( @PathVariable int prodNo) throws Exception {
 		
-		System.out.println("prod_No : "  + prodNo );
-		System.out.println("/product/getProduct : GET");
-		//Business Logic
-		Product product = productService.getProduct(prodNo);
+		System.out.println("/product/getProduct/{prodNo} : GET ");
+		return productService.getProduct(prodNo);
+		
 		// Model 과 View 연결
-		model.addAttribute("product", product);
-		model.addAttribute("menu", menu);
 		
 		//쿠키구현은 @CookieValue를 사용해서 여기서 
-		
-		//parameter menu가 manage라면 
-		if (menu.equals("manage")) {
-			return "forward:/product/updateProductView.jsp";
-		} else  {
-
-			return "forward:/product/getProduct.jsp";
-		}
-		
 	}
 	
-//	@RequestMapping("/updateProductView.do")
-//	public String updateProductView( @RequestParam("prodNo") int prodNo , Model model ) throws Exception{
-	@RequestMapping(value = "updateProduct", method = RequestMethod.GET)
-	public String updateProduct( @RequestParam("prodNo") int prodNo , Model model ) throws Exception{
+	@RequestMapping(value = "json/updateProduct/{prodNo}", method = RequestMethod.GET)
+	public Product updateProduct( @PathVariable("prodNo") int prodNo ) throws Exception{
 
-		System.out.println("/product/updateProduct : GET");
+		System.out.println("json/product/updateProduct : GET");
+		
 		//Business Logic
-		Product product = productService.getProduct(prodNo);
+		return productService.getProduct(prodNo);
 		
-		// Model 과 View 연결
-		model.addAttribute("product", product);
-		
-		return "forward:/product/updateProduct.jsp";
 	}
 	
-//	@RequestMapping("/updateProduct.do")
-//	public String updateProduct( @ModelAttribute("product") Product product , Model model , HttpSession session) throws Exception{
-	@RequestMapping(value = "updateProduct", method = RequestMethod.POST)
-	public String updateProduct( @ModelAttribute("product") Product product , Model model , HttpSession session) throws Exception{
+	@RequestMapping(value = "json/updateProduct", method = RequestMethod.POST)
+	public void updateProduct( @RequestBody Product product ) throws Exception{
 
-		System.out.println("/product/updateProduct : POST");
+		System.out.println("/product/json/updateProduct : POST");
 		//Business Logic
 		productService.updateProduct(product);
 		
-//		int sessionNo=((Product)session.getAttribute("product")).getProdNo();
-//		if(sessionNo == product.getProdNo()){
-//			session.setAttribute("product", product);
-//			System.out.println("updateProduct sessionNo 확인" + session.getAttribute("product"));
-//		}
-		model.addAttribute("product",product);
-		System.out.println("product update : " + product);
+		System.out.println("/product/json/updateProduct : POST 끝");
 		
-		return "redirect:/product/getProduct?prodNo=" + product.getProdNo() + "&menu=ok";
 	}
 	
-//	@RequestMapping("/listProduct.do")
-//	public String listProduct( @ModelAttribute("search") Search search ,
-//								@ModelAttribute("page") Page page ,
-//								Model model , HttpServletRequest request) throws Exception{
-	@RequestMapping(value = "listProduct")
-	public String listProduct( @ModelAttribute("search") Search search ,
-//			@ModelAttribute("page") Page page ,
-			Model model , HttpServletRequest request) throws Exception{
+	@RequestMapping(value = "json/listProduct", method = RequestMethod.GET)
+	public Map listProduct( HttpServletRequest request) throws Exception{
 		
-		System.out.println("/product/listProduct GET / POST");
+		System.out.println("json/listProduct GET start");
+		
+		
+		Search search = new Search();
 		
 		if(search.getCurrentPage() ==0 ){
 			search.setCurrentPage(1);
 		}
-		
-		search.setSearchCondition(request.getParameter("searchCondition"));
-		search.setSearchKeyword(request.getParameter("searchKeyword"));
 		search.setPageSize(pageSize);
 		//아래 보여줄 pageUnit을 세팅해줬음. 페지이 모델어트리뷰트 추가
-//		page.setPageUnit(pageUnit);
 		
 		
 		// Business logic 수행
@@ -247,11 +212,11 @@ public class ProductController2 {
 		Page resultPage = new Page( search.getCurrentPage(), ((Integer)map.get("totalCount")).intValue(), pageUnit, pageSize);
 		System.out.println(resultPage);
 		
-		// Model 과 View 연결
-		model.addAttribute("list", map.get("list"));
-		model.addAttribute("resultPage", resultPage);
-		model.addAttribute("search", search);
+		map.put("list", map.get("list"));
+		map.put("resultPage", resultPage);
+		map.put("search", search);
 		
-		return "forward:/product/listProduct.jsp";
+		System.out.println("json/listProduct GET end");
+		return map;		
 	}
 }

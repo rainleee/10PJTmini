@@ -43,9 +43,47 @@
 			//==> userId LINK Event 연결처리
 			//==> DOM Object GET 3가지 방법 ==> 1. $(tagName) : 2.(#id) : 3.$(.className)
 			//==> 3 과 1 방법 조합 : $(".className tagName:filter함수") 사용함.
-			$( ".ct_list_pop td:nth-child(3)" ).on("click" , function() {
+			 $( ".ct_list_pop td:nth-child(3)" ).on("click" , function() {
 				var prodNo = $(this).children("input:hidden").val();
 					 self.location ="/product/getProduct?prodNo=" + prodNo + "&menu=${param.menu}";  
+					 console.log("prodNo : "+ prodNo); 
+			}); 
+			
+			$( ".ct_list_pop td:nth-child(3)" ).mouseenter(function() {
+				var prodNo = $(this).children("input:hidden").val();
+				$.ajax(
+						{
+							url: "/product/json/getProduct/" + prodNo,
+							method : "GET",
+							dataType : "json",
+							headers : {
+								"Accept" : "application/json",
+								"Content-Type" : "application/json"
+							},
+							success : function(JSONData , status){
+								
+								//Debug...
+								//alert(status);
+								//Debug...
+								//alert("JSONData : \n"+JSONData);
+								
+								var displayValue = "<h3>"
+															+"상품번호 : "+JSONData.prodNo+"<br/>"
+															+"상품명 : "+JSONData.prodName+"<br/>"
+															+"상품이미지 : "+JSONData.fileName+"<br/>"
+															+"상품상세정보 : "+JSONData.prodDetail+"<br/>"
+															+"제조일자 : "+JSONData.manuDate+"<br/>"
+															+"가격 : "+JSONData.price+"<br/>"
+															+"가입일자 : "+JSONData.regDate+"<br/>"
+															+"</h3>";
+								//Debug...									
+								//alert(displayValue);
+								$("h3").remove();
+								$( "#"+prodNo+"" ).html(displayValue);
+								
+							}
+					
+				});
 					 console.log("prodNo : "+ prodNo); 
 			});
 			
@@ -54,20 +92,15 @@
 			$("h7").css("color" , "steelblue");
 			
 			
-			//==> 아래와 같이 정의한 이유는 ??
-			//==> 아래의 주석을 하나씩 풀어 가며 이해하세요.					
 			$(".ct_list_pop:nth-child(4n+6)" ).css("background-color" , "whitesmoke");
-			//console.log ( $(".ct_list_pop:nth-child(1)" ).html() );
-			//console.log ( $(".ct_list_pop:nth-child(2)" ).html() );
-			//console.log ( $(".ct_list_pop:nth-child(3)" ).html() );
 			console.log ( $(".ct_list_pop:nth-child(4)" ).html() ); //==> ok
-			//console.log ( $(".ct_list_pop:nth-child(5)" ).html() ); 
-			//console.log ( $(".ct_list_pop:nth-child(6)" ).html() ); //==> ok
-			//console.log ( $(".ct_list_pop:nth-child(7)" ).html() ); 
 			
 			$( "#tranUpdate" ).on("click" , function() {
 				self.location ="/purchase/updateTranCode?tranNo=${product.proTranCode}&tranCode=2&currentPage=${resultPage.currentPage}"+$(this).text().trim();
 			});
+			
+			//==> 아래와 같이 정의한 이유는 ??
+			$(".ct_list_pop:nth-child(4n+6)" ).css("background-color" , "whitesmoke");
 		});	
 </script>
 
@@ -129,8 +162,6 @@
 									src="/images/ct_btnbg01.gif" width="17" height="23"></td>
 								<td background="/images/ct_btnbg02.gif" class="ct_btn01"
 									style="padding-top: 3px;">
-									<!-- <a
-									href="javascript:fncGetList('1');">검색</a> -->
 									검색
 									</td>
 								<td width="14" height="23"><img
@@ -163,12 +194,6 @@
 				<tr>
 					<td colspan="11" bgcolor="808285" height="1"></td>
 				</tr>
-				<%--
-					for (int i = 0; i < list.size(); i++) {
-						Product Product = list.get(i);
-
-						if (Product.getProTranCode().equals("sale")) {
-				--%>
 				<c:set var="i" value="0" />
 				<c:forEach var="product" items="${list}">
 					<c:set var="i" value="${i + 1}" />
@@ -224,7 +249,9 @@
 					</td>
 				</tr>
 				<tr>
-					<td colspan="11" bgcolor="D6D7D6" height="1"></td>
+					<!-- <td colspan="11" bgcolor="D6D7D6" height="1"></td> -->
+					<!-- ajax로 하기위해서 변경된 부분 -->
+					<td id="${product.prodNo}" colspan="11" bgcolor="D6D7D6" height="1"></td>
 				</tr>
 				
 			</c:forEach>
